@@ -1,6 +1,6 @@
 // Configuration
 const MATCH_QR_STRING = "ABCDEF1234567890ABCDEF1234567890";
-const SUBMIT_URL = "https://script.google.com/macros/library/d/1OtS6uOg7zSpyGURr-7CJvOhYurBfeXC7Zf3hugirE94RQeyvrgADefwf/1";
+const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzB3At0Tvm8DIaAMc073tfxC_RRKkxIulxn2N-2kjoOhx0VKyLCcUeO2zs8gTvf7t6Iww/exec";
 // const SUBMIT_URL = "https://jsonplaceholder.typicode.com/posts"; 
 // State
 let data = {};
