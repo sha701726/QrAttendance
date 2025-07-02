@@ -1,5 +1,3 @@
-
-
 // Configuration
 const MATCH_QR_STRING = "ABCDEF1234567890ABCDEF1234567890";
 const SUBMIT_URL = "https://script.google.com/macros/library/d/1OtS6uOg7zSpyGURr-7CJvOhYurBfeXC7Zf3hugirE94RQeyvrgADefwf/1";
