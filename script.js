@@ -1,8 +1,9 @@
 
+
 // Configuration
 const MATCH_QR_STRING = "ABCDEF1234567890ABCDEF1234567890";
-const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbyIGXP0bhfiLWMOquAEVtFXT9iSMBDy-ATpFUgI2wfBjvAhECOXYeYJHB8E9lZlAYjG/exec";
-
+const SUBMIT_URL = "https://script.google.com/macros/library/d/1OtS6uOg7zSpyGURr-7CJvOhYurBfeXC7Zf3hugirE94RQeyvrgADefwf/1";
+// const SUBMIT_URL = "https://jsonplaceholder.typicode.com/posts"; 
 // State
 let data = {};
 let scannerStopped = false;
@@ -257,12 +258,12 @@ async function handleSuccessfulScan() {
             
             let errorMsg = "Error submitting attendance. Please try again.";
             if (err.message.includes('CORS') || err.message.includes('fetch')) {
-                errorMsg = "Network error. For local testing, please use the Replit preview.";
+                errorMsg = "Network error. For local testing";
             } else if (err.message.includes('HTTP')) {
                 errorMsg = `Server error: ${err.message}`;
             }
             
-            alert(errorMsg);
+            alert(err);
             
             // Reset submission state for retry
             data.submitted = false;
@@ -339,4 +340,8 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput("This endpoint accepts POST requests.");
 }
