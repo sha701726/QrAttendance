@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart QR Attendance System</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'rgb(255, 60, 77)',
+                        'primary-dark': 'rgb(220, 50, 67)',
+                        'primary-light': 'rgb(255, 90, 105)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .scanner-active { 
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; 
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .success-glow {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+        #qr-reader {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .instruction-step {
+            transition: all 0.3s ease;
+        }
+        .instruction-step:hover {
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b-2 border-primary">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-2xl font-bold text-gray-900">Smart QR Attendance</h1>
+                        <p class="text-xs sm:text-sm text-gray-600">Secure • Automated • Efficient</p>
+                    </div>
+                </div>
+                <div id="status-indicator" class="flex items-center space-x-1 sm:space-x-2">
+                    <div id="status-dot" class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                    <span id="status-text" class="text-xs sm:text-sm font-medium text-gray-700 hidden sm:inline">Initializing...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            <!-- Left Column - QR Scanner & Form -->
+            <div class="space-y-4 sm:space-y-6">
+                <!-- QR Scanner Card -->
+                <div class="bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-4 sm:mb-6">
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900">QR Scanner</h2>
+                        <div id="scanner-status" class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <span class="text-xs sm:text-sm text-gray-600 hidden sm:inline">Inactive</span>
+                        </div>
+                    </div>
+                    
+                    <div id="qr-scanner-container" class="relative">
+                        <div id="qr-reader" class="w-full bg-gray-100 rounded-lg min-h-[250px] sm:min-h-[300px] flex items-center justify-center">
+                            <div class="text-center text-gray-500">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                                <p class="font-medium">Camera will activate after saving information</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Information Card -->
+                <div id="form-card" class="bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-4 sm:mb-6">
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900">Personal Information</h2>
+                        <div id="form-status" class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+                            <span class="text-xs sm:text-sm text-gray-600 hidden sm:inline">Required</span>
+                        </div>
+                    </div>
+                    
+                    <form id="virus-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Full Name</label>
+                            <input type="text" id="fullName" placeholder="Enter your full name" required
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Mobile Number</label>
+                            <input type="tel" id="mobile" placeholder="Enter your mobile number" required
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Employee ID</label>
+                            <input type="text" id="employeeId" placeholder="Enter your employee ID" required
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Department</label>
+                            <input type="text" id="department" placeholder="Enter your department" required
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 sm:py-3.5 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-primary focus:ring-offset-2 text-base touch-manipulation">
+                            Save Information
+                        </button>
+                    </form>
+
+                    <!-- User Info Display (Hidden by default) -->
+                    <div id="user-info-display" class="hidden space-y-3">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="font-medium text-green-800">Information Saved Successfully</h3>
+                            </div>
+                            <p class="text-sm text-green-700">Your details are securely stored locally. QR scanner is now active.</p>
+                        </div>
+                        <button id="edit-info-btn" class="text-primary hover:text-primary-dark font-medium text-sm transition-colors">
+                            Edit Information
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Instructions & Process -->
+            <div class="space-y-4 sm:space-y-6">
+                <div class="bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">How It Works</h2>
+                    
+                    <div class="space-y-3 sm:space-y-6">
+                        <div class="instruction-step flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg bg-gray-50">
+                            <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm">1</div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Fill Your Information Once</h3>
+                                <p class="text-gray-600 text-xs sm:text-sm">Enter your personal details in the form. This information is securely stored locally in your browser and only needs to be entered once.</p>
+                            </div>
+                        </div>
+
+                        <div class="instruction-step flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg bg-gray-50">
+                            <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm">2</div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">QR Scanner Activates</h3>
+                                <p class="text-gray-600 text-xs sm:text-sm">Once your information is saved, the QR scanner automatically starts and continuously monitors for authorized QR codes.</p>
+                            </div>
+                        </div>
+
+                        <div class="instruction-step flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg bg-gray-50">
+                            <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm">3</div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Automatic Authentication</h3>
+                                <p class="text-gray-600 text-xs sm:text-sm">When a QR code is scanned, the system validates the 128-bit authentication string to ensure it's an authorized attendance QR.</p>
+                            </div>
+                        </div>
+
+                        <div class="instruction-step flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg bg-gray-50">
+                            <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm">4</div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Instant Submission</h3>
+                                <p class="text-gray-600 text-xs sm:text-sm">Upon successful validation, your stored information is automatically submitted to the attendance system with a timestamp.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status Card -->
+                <div class="bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">System Status</h2>
+                    
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Form Status</span>
+                            <span id="form-status-badge" class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Incomplete</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Scanner Status</span>
+                            <span id="scanner-status-badge" class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Inactive</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Submission Status</span>
+                            <span id="submission-status-badge" class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md mx-4 slide-in">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Attendance Submitted!</h3>
+                <p class="text-gray-600 mb-4">Your attendance has been successfully recorded.</p>
+                <button id="close-modal" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
